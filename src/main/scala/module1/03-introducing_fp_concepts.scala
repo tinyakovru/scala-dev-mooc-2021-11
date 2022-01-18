@@ -1,8 +1,11 @@
 package module1
 
 import java.util.UUID
+
 import scala.annotation.tailrec
 import java.time.Instant
+
+import scala.collection.immutable.{AbstractSeq, LinearSeq}
 import scala.language.postfixOps
 
 
@@ -70,19 +73,19 @@ object recursion {
 
 
    def factRec(n: Int): Int = {
-    if (n<=0) 1 else n * factRec(n-1) 
+    if (n<=0) 1 else n * factRec(n-1)
    }
 
- 
+
    def factTailRec(n: Int): Int = {
        @tailrec
-       def loop(n: Int, accum: Int): Int = 
+       def loop(n: Int, accum: Int): Int =
            if(n == 1) accum
            else loop(n - 1, n * accum)
         loop(n, 1)
    }
 
-  
+
 
 
   /**
@@ -103,7 +106,7 @@ object hof{
    case class Record(value: String)
 
    case class Request()
-   
+
    object Request {
        def parse(str: String): Request = ???
    }
@@ -131,7 +134,7 @@ object hof{
        val req: Request = Request.parse(r.value)
             // save(request)
    })
-  
+
 
   // обертки
 
@@ -154,11 +157,11 @@ object hof{
 
   def isOdd(i: Int): Boolean = i % 2 > 0
 
-  
-   
-  def not[A](f: A => Boolean): A => Boolean = a => ! f(a) 
-  
-  
+
+
+  def not[A](f: A => Boolean): A => Boolean = a => ! f(a)
+
+
   lazy val isEven = not(isOdd)
 
 
@@ -174,7 +177,7 @@ object hof{
 
   val res: Int => Int = partial(1, sum)
 
-  res(3) 
+  res(3)
 
 
 }
@@ -221,13 +224,29 @@ object hof{
           case Option.Some(v) => println(v)
           case Option.None =>
         }
+
+      def zip[B](b: Option[B]): Option[(T,B)] = this match {
+        case Option.Some(v1) => {
+          b match {
+            case Option.Some(v2) => Option.Some((v1,v2))
+            case Option.None => Option.None
+          }
+        }
+        case Option.None => Option.None
+      }
+
+      def filter(p: T => Boolean):Option[T] = this match {
+        case Option.Some(v) if p(v) => this
+        case _ => Option.None
+      }
+
    }
 
    object Option{
         case class Some[T](v: T) extends Option[T]
         case object None extends Option[Nothing]
 
-        def apply[T](v: T): Option[T] = ???
+        def apply[T](v: T): Option[T] = if(v == null) Option.None else Option.Some(v)
 
 
    }
@@ -257,6 +276,7 @@ object hof{
  }
 
  object list {
+
    /**
     *
     * Реализовать односвязанный иммутабельный список List
@@ -265,18 +285,81 @@ object hof{
     * Cons - непустой, содердит первый элемент (голову) и хвост (оставшийся список)
     */
 
-    sealed trait List[+T]{
+   sealed trait List[+T] {
 
-      def ::[A >: T](elem: A): List[A] = new :: (elem, this)
-    }
+     def ::[A >: T](elem: A): List[A] = new ::(elem, this)
 
-    case class ::[A](head: A, tail: List[A]) extends List[A]
-    case object Nil extends List[Nothing]
+     def mkString(dev: String): String = {
+       @tailrec
+       def addToString(acc: StringBuilder, v: List[T]): StringBuilder = {
+         v match {
+           case ::(head, tail) => addToString(acc.append(head).append(dev), tail)
+           case _ => acc.replace(acc.length() - dev.length, acc.length(), "")
+         }
+       }
+
+       addToString(new StringBuilder(), this).toString()
+     }
+
+     def map[R](f: T => R): List[R] = {
+       @scala.annotation.tailrec
+       def rec(listOld: List[T], listNew: List[R]): List[R] = listOld match {
+         case ::(head, tail) => rec(tail, new ::(f(head), listNew))
+         case Nil => listNew
+       }
+
+       rec(this, Nil).reverse()
+     }
+
+     def reverse(): List[T] = {
+       @scala.annotation.tailrec
+       def rec(listOld: List[T], listNew: List[T]): List[T] = listOld match {
+         case ::(head, tail) => rec(tail, new ::(head, listNew))
+         case Nil => listNew
+       }
+
+       rec(this, Nil)
+     }
+
+     def filter(f: T => Boolean): List[T] = {
+       @scala.annotation.tailrec
+       def rec(listOld: List[T], listNew: List[T]): List[T] = listOld match {
+         case ::(head, tail) if f(head) => rec(tail, new ::(head, listNew))
+         case ::(head, tail) if !f(head) => rec(tail, listNew)
+         case Nil => listNew
+       }
+
+       rec(this, Nil).reverse()
+     }
+
+     def incList: List[Int] = {
+       @scala.annotation.tailrec
+       def rec(listOld: List[T], listNew: List[Int]): List[Int] = listOld match {
+         case ::(head, tail) if head.isInstanceOf[Int] => rec(tail, new ::(head.asInstanceOf[Int] + 1, listNew))
+         case ::(head, tail) if !head.isInstanceOf[Int] => throw new Exception("invalid type")
+         case Nil => listNew
+       }
+       rec(this, Nil).reverse()
+     }
+
+     def shoutString: List[String] = {
+       @scala.annotation.tailrec
+       def rec(listOld: List[T], listNew: List[String]): List[String] = listOld match {
+         case ::(head, tail) if head.isInstanceOf[String] => rec(tail, new ::("!"+head.asInstanceOf[String], listNew))
+         case ::(head, tail) if !head.isInstanceOf[String] => throw new Exception("invalid type")
+         case Nil => listNew
+       }
+       rec(this, Nil).reverse()
+     }
+   }
+     case class ::[A](head: A, tail: List[A]) extends List[A]
+
+     case object Nil extends List[Nothing]
 
     object List {
       def apply[T](v: T*): List[T] = if (v.isEmpty) Nil else new ::(v.head, apply(v.tail: _*))
     }
-    
+
 
 
     /**
@@ -292,7 +375,7 @@ object hof{
     /**
       * Конструктор, позволяющий создать список из N - го числа аргументов
       * Для этого можно воспользоваться *
-      * 
+      *
       * Например вот этот метод принимает некую последовательность аргументов с типом Int и выводит их на печать
       * def printArgs(args: Int*) = args.foreach(println(_))
       */
