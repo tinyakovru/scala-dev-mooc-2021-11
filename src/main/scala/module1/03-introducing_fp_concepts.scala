@@ -325,7 +325,7 @@ object hof{
        @scala.annotation.tailrec
        def rec(listOld: List[T], listNew: List[T]): List[T] = listOld match {
          case ::(head, tail) if f(head) => rec(tail, new ::(head, listNew))
-         case ::(head, tail) if !f(head) => rec(tail, listNew)
+         case ::(head, tail) => rec(tail, listNew)
          case Nil => listNew
        }
 
@@ -358,6 +358,14 @@ object hof{
 
     object List {
       def apply[T](v: T*): List[T] = if (v.isEmpty) Nil else new ::(v.head, apply(v.tail: _*))
+
+      def incList1(l: List[Int]): List[Int] = {
+        l.map(v => v+1)
+      }
+
+      def shoutString(l: List[String]): List[String] = {
+        l.map(v => "!"+v)
+      }
     }
 
 

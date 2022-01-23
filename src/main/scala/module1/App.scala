@@ -60,10 +60,12 @@ object App {
     println(list2.filter(v => v>=0))
     println(list2.filter(v => v>=0).incList)
 
-//    val list3 = module1.list.List(5,7,"8",9)
-//    println(list3.incList)
+    val list3 = module1.list.List(5,7,8,9)
+    println(module1.list.List.incList1(list3))
     val list4 = module1.list.List("s1","s2","3")
-    println(list4.shoutString)
+//    println(list4.shoutString)
+    println(module1.list.List.shoutString(list4))
+
   }
 
 }
