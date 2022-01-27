@@ -36,7 +36,15 @@ object task_collections {
   def numbersToNumericString(text: String): String = {
     val numMap: Map[String, String] =
       Map(("1", "one"), ("2", "two"), ("3", "three"), ("4", "four"), ("5", "five"), ("6", "six"), ("7", "seven"), ("8", "eight"), ("9", "nine"))
-    numMap.foldLeft(text) { case (acc, (k, v)) => acc.replaceAll(k, v) }
+    //    numMap.foldLeft(text) { case (acc, (k, v)) => acc.replaceAll(k, v) }
+    text
+      .split(" ")
+      .toList
+      .foldLeft(new StringBuilder("")) { (ac, w) =>
+        ac.append(numMap.getOrElse(w, w)).append(" ")
+      }
+      .toString()
+      .trim
   }
 
   /**
@@ -53,6 +61,8 @@ object task_collections {
    * Хотим узнать какие машины можно обслужить учитывая этих двух дилеров
    * Реализуйте метод который примет две коллекции (два источника) и вернёт объединенный список уникальный значений
    **/
+  // метод, реализующий работу с Set  через union
+  // я сделал две реализации метода через union и через foldLeft
   def intersectionAuto(dealerOne: Iterable[Auto], dealerTwo: Iterable[Auto]): Iterable[Auto] = {
     dealerOne.toSet union dealerTwo.toSet
   }
@@ -70,6 +80,7 @@ object task_collections {
    * Реализуйте метод который примет две коллекции (два источника)
    * и вернёт уникальный список машин обслуживающихся в первом дилерском центре и не обслуживающимся во втором
    **/
+  // метод, реализующий работу с Set  через оператор --
   def filterAllLeftDealerAutoWithoutRight(dealerOne: Iterable[Auto], dealerTwo: Iterable[Auto]): Iterable[Auto] = {
     dealerOne.toSet -- dealerTwo.toSet
   }
