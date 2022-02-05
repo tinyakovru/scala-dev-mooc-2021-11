@@ -21,5 +21,11 @@ object task_futures_sequence {
    */
   def fullSequence[A](futures: List[Future[A]])
                      (implicit ex: ExecutionContext): Future[(List[A], List[Throwable])] =
-    task"Реализуйте метод `fullSequence`"()
+  //    task"Реализуйте метод `fullSequence`"()
+    futures.foldLeft(Future.successful((List.empty[A],List.empty[Throwable]))) { (ac, ft) =>
+      ac.zipWith(ft)((tup, res) => res match {
+        case res: A         => (res :: tup._1, tup._2)
+        case res: Throwable => (tup._1, res :: tup._2)
+      })
+    }
 }
